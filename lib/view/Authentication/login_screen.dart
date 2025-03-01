@@ -7,6 +7,7 @@ import 'package:project_one/resources/images.dart';
 import 'package:project_one/view/Authentication/signup_screen.dart';
 import 'package:project_one/view/customs/custom_auth_btn.dart';
 import 'package:project_one/view/customs/custom_text_field.dart';
+import 'package:project_one/view/home_page/todo_screen.dart';
 
 import '../../repository/user_repository.dart';
 
@@ -83,7 +84,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: CustomAuthBtn(
                       btnName: "Log-in",
                       onTap: () {
-                        if (_formKey.currentState!.validate()) {}
+                        if (_formKey.currentState!.validate()) {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => TodoScreen())); // Will change later
+                        }
                       },
                     ),
                   ),
