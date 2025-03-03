@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:project_one/bloc/obscure_text/obscure_text_bloc.dart';
+import 'package:project_one/model/user_model.dart';
 import 'package:project_one/resources/images.dart';
 import 'package:project_one/view/Authentication/signup_screen.dart';
 import 'package:project_one/view/customs/custom_auth_btn.dart';
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:project_one/view/customs/custom_text_field.dart';
 import 'package:project_one/view/home_page/todo_screen.dart';
 
@@ -62,14 +64,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             return CustomTextField(
                               functionOnEyeBtn: () {
                                 context.read<ObscureTextBloc>().add(
-                                  EnableOrDisableObscureTextEvent(),
+                                  EnableOrDisableIbscureInLogin()
                                 );
                               },
                               icon:
-                                  state.obscure == true
+                                  state.obscureLogin == true
                                       ? Icon(CupertinoIcons.eye_slash_fill)
                                       : Icon(CupertinoIcons.eye_fill),
-                              obscureText: state.obscure,
+                              obscureText: state.obscureLogin,
                               controller: passwordController,
                               validatorText: "Password Required",
                               hintText: "password",
@@ -85,7 +87,39 @@ class _LoginScreenState extends State<LoginScreen> {
                       btnName: "Log-in",
                       onTap: () {
                         if (_formKey.currentState!.validate()) {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => TodoScreen())); // Will change later
+                          DatabaseHelper.instance
+                              .loginUser(
+                                emailOrPhoneController.text,
+                                passwordController.text,
+                              )
+                              .then((value) {
+                                print(
+                                  "${value}--------------------------->then",
+                                );
+                                if (value == null) {
+                                  return ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        elevation: 0,
+                                          backgroundColor: Colors.transparent,
+                                          behavior: SnackBarBehavior.floating,
+                                          content: AwesomeSnackbarContent(
+                                    title: "Invalid credential",
+                                    message:
+                                    "Please check your email or password",
+                                    contentType: ContentType.warning,
+                                  )));
+                                } else {
+                                  return Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => TodoScreen(),
+                                    ),
+                                  );
+                                }
+                              })
+                              .onError((error, stackTrace) {
+                                return Container();
+                              });
                         }
                       },
                     ),

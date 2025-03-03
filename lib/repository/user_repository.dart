@@ -46,12 +46,21 @@ class DatabaseHelper {
     return await db.insert('users', user.toMap());
   }
 
-  // Get all users (for testing/debugging)
   Future<List<UserModel>> getAllUsers() async {
     Database db = await instance.database;
     final List<Map<String, dynamic>> maps = await db.query('users');
     return List.generate(maps.length, (i) {
       return UserModel.fromMap(maps[i]);
     });
+  }
+
+  Future<UserModel?> loginUser(String emailOrPassword, String password)async{
+      Database db = await instance.database;
+       List<Map<String, dynamic>> result = await db.query('users', where: 'email = ? OR phone = ? AND password = ?', whereArgs: [emailOrPassword, emailOrPassword, password],
+       );
+       if(result.isNotEmpty){
+        return UserModel.fromMap(result.first);
+       }
+       return null;
   }
 }
