@@ -1,13 +1,19 @@
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:project_one/bloc/obscure_text/obscure_text_bloc.dart';
 import 'package:project_one/model/user_model.dart';
 import 'package:project_one/resources/images.dart';
+import 'package:project_one/resources/router/app_router_path.dart';
+import 'package:project_one/utils/utils.dart';
 import 'package:project_one/view/Authentication/login_screen.dart';
 import 'package:project_one/view/customs/custom_auth_btn.dart';
 import 'package:project_one/view/customs/custom_text_field.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../repository/user_repository.dart';
 
@@ -23,8 +29,11 @@ class _SignupScreenState extends State<SignupScreen> {
   TextEditingController passwordController = TextEditingController();
   TextEditingController phoneController = TextEditingController();
   TextEditingController nameController = TextEditingController();
+  TextEditingController confirmController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
+
+  Utils utils = Utils();
 
   @override
   Widget build(BuildContext context) {
@@ -64,6 +73,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           hintText: "Email",
                         ),
                         CustomTextField(
+                          textInputType: TextInputType.number,
                           controller: phoneController,
                           validatorText: "phone number Required",
                           hintText: "phone number",
@@ -87,6 +97,25 @@ class _SignupScreenState extends State<SignupScreen> {
                             );
                           },
                         ),
+                        BlocBuilder<ObscureTextBloc, ObscureTextState>(
+                          builder: (context, state) {
+                            return CustomTextField(
+                              functionOnEyeBtn: () {
+                                context.read<ObscureTextBloc>().add(
+                                  EnableOrDisableConfirmBtn(),
+                                );
+                              },
+                              obscureText: state.confirmBtn,
+                              icon:
+                                  state.confirmBtn == true
+                                      ? Icon(CupertinoIcons.eye_slash_fill)
+                                      : Icon(CupertinoIcons.eye_fill),
+                              controller: confirmController,
+                              validatorText: "Enter Confirm Password",
+                              hintText: "confirm password",
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -95,36 +124,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     child: CustomAuthBtn(
                       btnName: "Sign-up",
                       onTap: () async {
-                        if (_formKey.currentState!.validate()) {
-                          UserModel newUser = UserModel(
-                            name: nameController.text,
-                            email: emailController.text,
-                            phone: phoneController.text,
-                            password: passwordController.text,
-                          );
-                          int result = await DatabaseHelper.instance.insertUser(
-                            newUser,
-                          );
-
-                          if (result > 0) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('User registered successfully!'),
-                              ),
-                            );
-
-                            nameController.clear();
-                            emailController.clear();
-                            phoneController.clear();
-                            passwordController.clear();
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Error registering user.'),
-                              ),
-                            );
-                          }
-                        }
+                        _signUp(context);
                       },
                     ),
                   ),
@@ -139,10 +139,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       padding: WidgetStatePropertyAll(EdgeInsets.all(0)),
                     ),
                     onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => LoginScreen()),
-                      );
+                      context.go(AppRouterPath.LoginScreen);
                     },
                     child: Text("LogIn"),
                   ),
@@ -153,5 +150,50 @@ class _SignupScreenState extends State<SignupScreen> {
         ),
       ),
     );
+  }
+
+  void _signUp(BuildContext context) async {
+    if (_formKey.currentState!.validate()) {
+      if (passwordController.text == confirmController.text) {
+        UserModel newUser = UserModel(
+          name: nameController.text,
+          email: emailController.text,
+          phone: phoneController.text,
+          password: passwordController.text,
+        );
+        int result = await DatabaseHelper.instance.insertUser(newUser);
+
+        if (result > 0) {
+          context.go(AppRouterPath.LoginScreen);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: AwesomeSnackbarContent(
+              title: "User registered successfully!",
+              message: "Please login to continue",
+              contentType: ContentType.success,
+            )),
+          );
+
+          nameController.clear();
+          emailController.clear();
+          phoneController.clear();
+          passwordController.clear();
+          confirmController.clear();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error registering user.')),
+          );
+        }
+      } else {
+        Fluttertoast.showToast(
+          msg: "Password not matched",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+      }
+    }
   }
 }

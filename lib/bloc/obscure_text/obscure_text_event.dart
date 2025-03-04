@@ -10,3 +10,5 @@ abstract class ObscureTextEvents extends Equatable {
 class EnableOrDisableObscureTextEvent extends ObscureTextEvents {}
 
 class EnableOrDisableIbscureInLogin extends ObscureTextEvents{}
+
+class EnableOrDisableConfirmBtn extends ObscureTextEvents{}

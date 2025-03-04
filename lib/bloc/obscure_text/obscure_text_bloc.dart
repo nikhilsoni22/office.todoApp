@@ -9,6 +9,7 @@ class ObscureTextBloc extends Bloc<ObscureTextEvents, ObscureTextState>{
     ObscureTextBloc() : super(ObscureTextState()){
       on<EnableOrDisableObscureTextEvent>(_enableOrDisableObscureTextEvent);
       on<EnableOrDisableIbscureInLogin>(_enableOrDisableObscureInLogin);
+      on<EnableOrDisableConfirmBtn>(_enableOrDisableConfirmBtn);
     }
 
     void _enableOrDisableObscureTextEvent(EnableOrDisableObscureTextEvent event, Emitter<ObscureTextState> emit){
@@ -17,5 +18,9 @@ class ObscureTextBloc extends Bloc<ObscureTextEvents, ObscureTextState>{
 
     void _enableOrDisableObscureInLogin(EnableOrDisableIbscureInLogin events, Emitter<ObscureTextState> emit){
       emit(state.copyWith(obscureLogin: !state.obscureLogin));
+    }
+
+    void _enableOrDisableConfirmBtn(EnableOrDisableConfirmBtn events, Emitter<ObscureTextState> emit){
+      emit(state.copyWith(confirmBtn: !state.confirmBtn));
     }
 }

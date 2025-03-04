@@ -1,15 +1,19 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:project_one/bloc/obscure_text/obscure_text_bloc.dart';
 import 'package:project_one/model/user_model.dart';
 import 'package:project_one/resources/images.dart';
+import 'package:project_one/resources/router/app_router_path.dart';
 import 'package:project_one/view/Authentication/signup_screen.dart';
 import 'package:project_one/view/customs/custom_auth_btn.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:project_one/view/customs/custom_text_field.dart';
 import 'package:project_one/view/home_page/todo_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../repository/user_repository.dart';
 
@@ -64,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             return CustomTextField(
                               functionOnEyeBtn: () {
                                 context.read<ObscureTextBloc>().add(
-                                  EnableOrDisableIbscureInLogin()
+                                  EnableOrDisableIbscureInLogin(),
                                 );
                               },
                               icon:
@@ -86,41 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: CustomAuthBtn(
                       btnName: "Log-in",
                       onTap: () {
-                        if (_formKey.currentState!.validate()) {
-                          DatabaseHelper.instance
-                              .loginUser(
-                                emailOrPhoneController.text,
-                                passwordController.text,
-                              )
-                              .then((value) {
-                                print(
-                                  "${value}--------------------------->then",
-                                );
-                                if (value == null) {
-                                  return ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        elevation: 0,
-                                          backgroundColor: Colors.transparent,
-                                          behavior: SnackBarBehavior.floating,
-                                          content: AwesomeSnackbarContent(
-                                    title: "Invalid credential",
-                                    message:
-                                    "Please check your email or password",
-                                    contentType: ContentType.warning,
-                                  )));
-                                } else {
-                                  return Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => TodoScreen(),
-                                    ),
-                                  );
-                                }
-                              })
-                              .onError((error, stackTrace) {
-                                return Container();
-                              });
-                        }
+                        _logIn(context);
                       },
                     ),
                   ),
@@ -135,10 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       padding: WidgetStatePropertyAll(EdgeInsets.all(0)),
                     ),
                     onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => SignupScreen()),
-                      );
+                      context.go(AppRouterPath.SignupScreen);
                     },
                     child: Text("Sign-up"),
                   ),
@@ -149,5 +116,37 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  void _logIn(BuildContext context) async {
+    try {
+
+      SharedPreferences sp = await SharedPreferences.getInstance();
+      sp.setString("userEmail", emailOrPhoneController.text);
+
+      UserModel? user = await DatabaseHelper.instance.loginUser(
+        emailOrPhoneController.text,
+        passwordController.text,
+      );
+
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            behavior: SnackBarBehavior.floating,
+            content: AwesomeSnackbarContent(
+              title: "Invalid credential",
+              message: "Please check your email or password",
+              contentType: ContentType.warning,
+            )));
+      } else {
+        context.go(AppRouterPath.TodoScreen);
+      }
+    } catch (e) {
+      print("Error during login: $e");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("An error occurred during login.")));
+    }
   }
 }

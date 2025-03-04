@@ -3,8 +3,9 @@ import 'dart:io';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:project_one/utils/utils.dart';
 import '../../../bloc/image_picker/image_pickerr_bloc.dart';
 import '../../../model/task_model.dart';
 import '../../../repository/task_repository.dart';
@@ -28,6 +29,16 @@ class _AddTaskState extends State<AddTask> {
     final width = MediaQuery.of(context).size.width * 1;
 
     return Scaffold(
+      floatingActionButton: BlocBuilder<ImagePickerBloc, ImagePickerState>(
+        builder: (context, state) {
+          return FloatingActionButton(
+            onPressed: () async {
+              _addTask(state);
+            },
+            child: Icon(Icons.arrow_forward),
+          );
+        },
+      ),
       body: SingleChildScrollView(
         child: Column(
           spacing: height * 0.07,
@@ -101,41 +112,6 @@ class _AddTaskState extends State<AddTask> {
                       ),
                     ),
                   ),
-                  BlocBuilder<ImagePickerBloc, ImagePickerState>(
-                    builder: (context, state) {
-                      return ElevatedButton(
-                        onPressed: () async {
-                          setState(() {});
-                          int result = await TaskDbHelper.instance.insertUser(
-                            TaskModel(
-                              task: taskController.text,
-                              desc: descController.text,
-                              isCompleted: iscomplete,
-                              image: state.image!.path,
-                            ),
-                          );
-                          if (result > 0) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: AwesomeSnackbarContent(
-                                  title: "Task added Successfully",
-                                  message:
-                                      "This is your task ${taskController.text}",
-                                  contentType: ContentType.success,
-                                ),
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Something Went Wrong")),
-                            );
-                          }
-                          Navigator.pop(context);
-                        },
-                        child: Text("Add"),
-                      );
-                    },
-                  ),
                 ],
               ),
             ),
@@ -143,5 +119,56 @@ class _AddTaskState extends State<AddTask> {
         ),
       ),
     );
+  }
+
+  void _addTask(ImagePickerState state) async {
+    try {
+      // Check if a user is logged in
+      String? userId = await TaskDbHelper.instance.getCurrentUserEmail();
+      if (userId == null) {
+        // No user logged in, show an error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("You must be logged in to create a task")),
+        );
+        return; // Exit the method
+      }
+      int result = await TaskDbHelper.instance.insertTask(
+        TaskModel(
+          task: taskController.text,
+          desc: descController.text,
+          isCompleted: iscomplete,
+          image: state.image!.path,
+        ),
+      );
+      if (result == -1) {
+        // No user logged in, show an error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("You must be logged in to create a task")),
+        );
+        return; // Exit the method
+      }
+      if (result > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            content: AwesomeSnackbarContent(
+              title: "Task added Successfully",
+              message: "This is your task ${taskController.text}",
+              contentType: ContentType.success,
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Something Went Wrong")));
+      }
+      context.pop();
+      setState(() {});
+    } catch (e) {
+      print(e);
+      Utils().flutterToastMessage(e.toString());
+    }
   }
 }

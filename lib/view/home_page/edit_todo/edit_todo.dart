@@ -3,8 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
-
 import '../../../bloc/image_picker/image_pickerr_bloc.dart';
 import '../../../model/task_model.dart';
 import '../../../repository/task_repository.dart';
@@ -40,6 +38,24 @@ class _EditTodoState extends State<EditTodo> {
     final width = MediaQuery.of(context).size.width * 1;
 
     return Scaffold(
+      floatingActionButton: BlocBuilder<ImagePickerBloc, ImagePickerState>(
+          builder: (context, state) {
+        return FloatingActionButton(onPressed: (){
+          setState(() {});
+          TaskDbHelper.instance.updateTask(
+              TaskModel(
+                  id: widget.items.id,
+                  task: updatedTask,
+                  desc: updatedDesc,
+                  isCompleted: isComplete,
+                  image: state.image?.path ?? widget.items.image)).then((value) {
+            return Navigator.pop(context);
+
+          }).onError((error, stackTrace) {
+            print("${error}-------------------------> this is error");
+          });
+        }, child: Icon(Icons.edit));
+      }),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -112,27 +128,6 @@ class _EditTodoState extends State<EditTodo> {
                 ),
               ),
             ),
-            SizedBox(height: height * 0.02),
-            BlocBuilder<ImagePickerBloc, ImagePickerState>(builder: (context, state) {
-              return  ElevatedButton(
-                onPressed: () {
-                  setState(() {});
-                  TaskDbHelper.instance.updateTask(
-                      TaskModel(
-                          id: widget.items.id,
-                          task: updatedTask,
-                          desc: updatedDesc,
-                          isCompleted: isComplete,
-                          image: state.image?.path ?? widget.items.image)).then((value) {
-                          return Navigator.pop(context);
-        
-                  }).onError((error, stackTrace) {
-                    print("${error}-------------------------> this is error");
-                  });
-                },
-                child: Text("edit"),
-              );
-            }),
           ],
         ),
       ),
