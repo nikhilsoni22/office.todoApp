@@ -8,3 +8,5 @@ abstract class ImagePickerEvents extends Equatable {
 }
 
 class PickImageFromGallery extends ImagePickerEvents {}
+
+class ClearImage extends ImagePickerEvents{}

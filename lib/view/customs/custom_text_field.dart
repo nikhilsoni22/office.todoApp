@@ -41,8 +41,12 @@ class CustomTextField extends StatelessWidget {
         if(value!.isEmpty){
           return validatorText;
         }
-        if(hintText == "Email" && !value.contains('@gmail.com') && value.contains(" ")){
+        if(hintText == "Email" && !value.contains('@gmail.com') || value.contains(" ")){
           return "Please Provide Valid Email Address";
+        }
+
+        if(hintText == "phone number" && value.length != 10){
+          return "Number must be 10 digits";
         }
         if(hintText == "password" && value.length < 6){
           return "Password must be atleast 6 characters";

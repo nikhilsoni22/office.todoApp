@@ -5,11 +5,9 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io' as io;
 
-import 'package:uuid/uuid.dart';
-
 class DatabaseHelper {
   static const _databaseName = "users.db";
-  static const _databaseVersion = 2;
+  static const _databaseVersion = 2; // Decrement the version
   static const table = "users";
 
   // Make this a singleton class
@@ -51,19 +49,29 @@ class DatabaseHelper {
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    print("Upgrading database from version $oldVersion to $newVersion ------------------------------------------>");
+    print(
+        "Upgrading database from version $oldVersion to $newVersion ------------------------------------------>");
     if (oldVersion < newVersion) {
-      if (oldVersion < 3) {
-        // Add the userEmail column
-        await db.execute("ALTER TABLE $table ADD COLUMN userEmail TEXT");
-        print("Added userEmail column to user table >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-      }
+      // No need to add or rename columns anymore
     }
   }
 
   // Insert a user
   Future<int> insertUser(UserModel user) async {
     Database db = await instance.database;
+    // Check if a user with this email already exists
+    List<Map<String, dynamic>> existingUsers = await db.query(
+      'users',
+      where: 'email = ?',
+      whereArgs: [user.email],
+    );
+
+    if (existingUsers.isNotEmpty) {
+      // User with this email already exists
+      return -2; // Return a special code to indicate duplicate email
+    }
+
+    // No existing user, proceed with insertion
     return await db.insert('users', user.toMap());
   }
 
@@ -85,8 +93,7 @@ class DatabaseHelper {
     if (result.isNotEmpty) {
       final prefs = await SharedPreferences.getInstance();
       // Store the user's email in SharedPreferences
-      // await prefs.setString('userEmail', result.first['email']);
-      print(result.first);
+      await prefs.setString('userEmail', result.first['email']);
       return UserModel.fromMap(result.first);
     }
     return null;
@@ -98,7 +105,5 @@ class DatabaseHelper {
     await prefs.remove('phone');
     await prefs.remove('name');
     await prefs.remove('password');
-    // Remove the userEmail from SharedPreferences
-    await prefs.remove('userEmail');
   }
 }

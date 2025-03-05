@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:project_one/model/task_model.dart';
 import 'package:project_one/resources/router/app_router_path.dart';
 import 'package:project_one/resources/style.dart';
+import 'package:project_one/view/home_page/todo_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../repository/task_repository.dart';
@@ -37,8 +38,10 @@ class _TodoDetailScreenState extends State<TodoDetailScreen> {
     final width = MediaQuery.of(context).size.width * 1;
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Icon(Icons.cancel),
+        backgroundColor: Color(0xff0AB6AB),
+        toolbarHeight: height * 0.1,
+        title: Text("TASK"),
+        centerTitle: true,
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,8 +82,6 @@ class _TodoDetailScreenState extends State<TodoDetailScreen> {
                   child: DropdownButtonFormField2<String>(
                     isExpanded: true,
                     decoration: InputDecoration(
-                      // Add Horizontal padding using menuItemStyleData.padding so it matches
-                      // the menu padding when button's width is not specified.
                       contentPadding: const EdgeInsets.symmetric(vertical: 16),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
@@ -107,6 +108,9 @@ class _TodoDetailScreenState extends State<TodoDetailScreen> {
                     },
                     onSaved: (value) {
                       selectedValue = value.toString();
+                      setState(() {
+
+                      });
                     },
                     buttonStyleData: const ButtonStyleData(
                       padding: EdgeInsets.only(right: 8),
@@ -173,11 +177,12 @@ class _TodoDetailScreenState extends State<TodoDetailScreen> {
     );
   }
 
-  void _deleteTask(){
+  Future<void> _deleteTask() async {
     setState(() {
-      TaskDbHelper.instance.deleteTask(widget.items.id!);
+
     });
-    context.go(AppRouterPath.TodoScreen);
+      await TaskDbHelper.instance.deleteTask(widget.items.id!);
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => TodoScreen()));
   }
 
 }

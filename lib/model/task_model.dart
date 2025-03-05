@@ -2,6 +2,7 @@ class TaskModel {
   final int? id;
   final String task;
   final String desc;
+  final String userEmail;
   late final bool isCompleted;
   final String image;
 
@@ -9,6 +10,7 @@ class TaskModel {
    this.id,
    required this.task,
    required this.desc,
+    required this.userEmail,
    required this.isCompleted,
    required this.image,
   });
@@ -17,6 +19,7 @@ class TaskModel {
     return {
       'id': id,
       'task': task,
+      'userEmail': userEmail,
       'desc': desc,
       'isCompleted': isCompleted ? 1 : 0,
       'image': image,
@@ -27,6 +30,7 @@ class TaskModel {
     return TaskModel(
         id: map['id'],
         task: map['task'],
+        userEmail: map['userEmail'] ?? '',
         desc: map['desc'],
         isCompleted: map['isCompleted'] == 1 ? true : false,
         image: map['image'],

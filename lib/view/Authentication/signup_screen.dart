@@ -33,8 +33,6 @@ class _SignupScreenState extends State<SignupScreen> {
 
   final _formKey = GlobalKey<FormState>();
 
-  Utils utils = Utils();
-
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width * 1;
@@ -139,7 +137,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       padding: WidgetStatePropertyAll(EdgeInsets.all(0)),
                     ),
                     onPressed: () {
-                      context.go(AppRouterPath.LoginScreen);
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen()));
                     },
                     child: Text("LogIn"),
                   ),
@@ -164,9 +162,13 @@ class _SignupScreenState extends State<SignupScreen> {
         int result = await DatabaseHelper.instance.insertUser(newUser);
 
         if (result > 0) {
-          context.go(AppRouterPath.LoginScreen);
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen()));
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: AwesomeSnackbarContent(
+            const SnackBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                behavior: SnackBarBehavior.floating,
+                content: AwesomeSnackbarContent(
               title: "User registered successfully!",
               message: "Please login to continue",
               contentType: ContentType.success,
@@ -179,9 +181,7 @@ class _SignupScreenState extends State<SignupScreen> {
           passwordController.clear();
           confirmController.clear();
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error registering user.')),
-          );
+          Utils().flutterToastMessage("Email address already in use");
         }
       } else {
         Fluttertoast.showToast(

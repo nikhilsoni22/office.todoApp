@@ -7,11 +7,9 @@ import 'package:sqflite/sqflite.dart';
 
 class TaskDbHelper {
   TaskDbHelper._privaterConstructor();
-
   static final TaskDbHelper instance = TaskDbHelper._privaterConstructor();
 
   static Database? _database;
-
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
@@ -21,22 +19,15 @@ class TaskDbHelper {
   _initDatabase() async {
     io.Directory directory = await getApplicationDocumentsDirectory();
     String path = join(directory.path, "AddTask_db");
-    return await openDatabase(
-      path,
-      version: 3,
-      onCreate: _onCreate,
-     // onUpgrade: _onUpgrade,
-    );
+    return await openDatabase(path, version: 2, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }
 
   Future _onCreate(Database db, int version) async {
     // Create the task table
-
-    SharedPreferences sp = await SharedPreferences.getInstance();
     await db.execute('''
-      CREATE TABLE ${sp.getString("userEmail")} (
+      CREATE TABLE task (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId TEXT,
+        userEmail TEXT,
         task TEXT,
         desc TEXT,
         isCompleted INTEGER,
@@ -45,27 +36,17 @@ class TaskDbHelper {
     ''');
   }
 
-  // Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
-  //   print(
-  //     "Upgrading database from version $oldVersion to $newVersion ------------------------------------------>",
-  //   );
-  //   if (oldVersion < newVersion) {
-  //     if (oldVersion < 2) {
-  //       // Add the userId column
-  //       await db.execute("ALTER TABLE task ADD COLUMN userId TEXT");
-  //       print(
-  //         "Added userId column to task table >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
-  //       );
-  //     }
-  //     if (oldVersion < 3) {
-  //       // Rename the userId column to userEmail
-  //       await db.execute("ALTER TABLE task RENAME COLUMN userId TO userEmail");
-  //       print(
-  //         "Renamed userId column to userEmail in task table >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
-  //       );
-  //     }
-  //   }
-  // }
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    print("Upgrading database from version $oldVersion to $newVersion ------------------------------------------>");
+    if (oldVersion < newVersion) {
+      if (oldVersion < 2) {
+        // Add the userEmail column
+        await db.execute("ALTER TABLE task ADD COLUMN userEmail TEXT");
+        print("Added userEmail column to task table >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+      }
+    }
+  }
 
   Future<String?> getCurrentUserEmail() async {
     final prefs = await SharedPreferences.getInstance();
@@ -78,17 +59,17 @@ class TaskDbHelper {
     await prefs.remove('userEmail');
   }
 
-  Future<void> deleteDatabase() async {
-    io.Directory directory = await getApplicationDocumentsDirectory();
-    String path = join(directory.path, "AddTask_db");
-    io.File dbFile = io.File(path);
-    if (await dbFile.exists()) {
-      await dbFile.delete();
-      print("Database file deleted: $path");
-    } else {
-      print("Database file not found: $path");
-    }
-  }
+  // Future<void> deleteDatabase() async {
+  //   io.Directory directory = await getApplicationDocumentsDirectory();
+  //   String path = join(directory.path, "AddTask_db");
+  //   io.File dbFile = io.File(path);
+  //   if (await dbFile.exists()) {
+  //     await dbFile.delete();
+  //     print("Database file deleted: $path");
+  //   } else {
+  //     print("Database file not found: $path");
+  //   }
+  // }
 
   Future<int> insertTask(TaskModel taskModel) async {
     Database db = await instance.database;
@@ -97,7 +78,7 @@ class TaskDbHelper {
       return -1; // No user logged in
     }
     Map<String, dynamic> taskMap = taskModel.toMap();
-    taskMap['userEmail'] = userEmail;
+    taskMap['userEmail'] = userEmail; // Add the user email to the row
     return await db.insert("task", taskMap);
   }
 
@@ -105,15 +86,12 @@ class TaskDbHelper {
     Database db = await instance.database;
     String? userEmail = await getCurrentUserEmail();
     if (userEmail == null) {
-      return [];
+      return []; // No user logged in, return empty list
     }
-    var tasks = await db.query(
-      "task",
-      where: 'userEmail = ?',
-      whereArgs: [userEmail],
-    );
-    List<TaskModel> taskList =
-        tasks.isNotEmpty ? tasks.map((e) => TaskModel.fromMap(e)).toList() : [];
+    var tasks = await db.query("task", where: 'userEmail = ?', whereArgs: [userEmail]);
+    List<TaskModel> taskList = tasks.isNotEmpty
+        ? tasks.map((e) => TaskModel.fromMap(e)).toList()
+        : [];
     return taskList;
   }
 
@@ -123,11 +101,7 @@ class TaskDbHelper {
     if (userEmail == null) {
       return []; // No user logged in, return empty list
     }
-    await db.delete(
-      "task",
-      where: 'id = ? AND userEmail = ?',
-      whereArgs: [id, userEmail],
-    );
+    await db.delete("task", where: 'id = ? AND userEmail = ?', whereArgs: [id, userEmail]);
     return await getAllTasks();
   }
 
@@ -137,12 +111,7 @@ class TaskDbHelper {
     if (userEmail == null) {
       return []; // No user logged in, return empty list
     }
-    await db.update(
-      "task",
-      taskModel.toMap(),
-      where: 'id = ? AND userEmail = ?',
-      whereArgs: [taskModel.id, userEmail],
-    );
+    await db.update("task", taskModel.toMap(), where: 'id = ? AND userEmail = ?', whereArgs: [taskModel.id, userEmail]);
     return await getAllTasks();
   }
 }

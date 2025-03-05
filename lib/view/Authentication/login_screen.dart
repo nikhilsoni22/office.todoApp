@@ -13,8 +13,6 @@ import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:project_one/view/customs/custom_text_field.dart';
 import 'package:project_one/view/home_page/todo_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart';
-
 import '../../repository/user_repository.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -90,6 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: CustomAuthBtn(
                       btnName: "Log-in",
                       onTap: () {
+                        setState(() {});
                         _logIn(context);
                       },
                     ),
@@ -105,7 +104,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       padding: WidgetStatePropertyAll(EdgeInsets.all(0)),
                     ),
                     onPressed: () {
-                      context.go(AppRouterPath.SignupScreen);
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => SignupScreen()),
+                      );
                     },
                     child: Text("Sign-up"),
                   ),
@@ -119,34 +121,40 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _logIn(BuildContext context) async {
-    try {
+    if (_formKey.currentState!.validate()) {
+      try {
+        SharedPreferences sp = await SharedPreferences.getInstance();
+        sp.setString("userEmail", emailOrPhoneController.text);
+        UserModel? user = await DatabaseHelper.instance.loginUser(
+          emailOrPhoneController.text,
+          passwordController.text,
+        );
 
-      SharedPreferences sp = await SharedPreferences.getInstance();
-      sp.setString("userEmail", emailOrPhoneController.text);
-
-      UserModel? user = await DatabaseHelper.instance.loginUser(
-        emailOrPhoneController.text,
-        passwordController.text,
-      );
-
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        if (user == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            behavior: SnackBarBehavior.floating,
-            content: AwesomeSnackbarContent(
-              title: "Invalid credential",
-              message: "Please check your email or password",
-              contentType: ContentType.warning,
-            )));
-      } else {
-        context.go(AppRouterPath.TodoScreen);
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              behavior: SnackBarBehavior.floating,
+              content: AwesomeSnackbarContent(
+                title: "Invalid credential",
+                message: "Please check your email or password",
+                contentType: ContentType.warning,
+              ),
+            ),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => TodoScreen()),
+          );
+        }
+      } catch (e) {
+        print("Error during login: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("An error occurred during login.")),
+        );
       }
-    } catch (e) {
-      print("Error during login: $e");
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("An error occurred during login.")));
     }
   }
 }

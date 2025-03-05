@@ -5,11 +5,12 @@ import 'package:project_one/bloc/obscure_text/obscure_text_bloc.dart';
 import 'package:project_one/repository/task_repository.dart';
 import 'package:project_one/resources/router/app_router.dart';
 import 'package:project_one/view/Authentication/login_screen.dart';
-import 'package:project_one/view/home_page/todo_screen.dart';
+import 'package:project_one/view/splash_screen/splash_screen.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-   await TaskDbHelper.instance.deleteDatabase();
+  // WidgetsFlutterBinding.ensureInitialized();
+   // await TaskDbHelper.instance.deleteDatabase();
+   //await DatabaseHelper.instance.deleteDatabase();
   runApp(const MyApp());
 }
 
@@ -22,12 +23,12 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(providers: [
       BlocProvider(create: (_) => ObscureTextBloc()),
       BlocProvider(create: (_) => ImagePickerBloc()),
-    ], child: MaterialApp.router(
-      routerConfig: AppRouter.goRoute,
+    ], child: MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      )// loginScreen(),
+      ),
+      home: SplashScreen(),// loginScreen(),
     ));
   }
 }

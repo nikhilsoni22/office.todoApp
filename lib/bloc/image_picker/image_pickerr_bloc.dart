@@ -13,6 +13,7 @@ class ImagePickerBloc extends Bloc<ImagePickerEvents, ImagePickerState> {
 
   ImagePickerBloc() : super(ImagePickerState()) {
     on<PickImageFromGallery>(_pickImageFromGallery);
+    on<ClearImage>(_ClearImage);
   }
 
   void _pickImageFromGallery(PickImageFromGallery events, Emitter<ImagePickerState> emit) async {
@@ -23,5 +24,11 @@ class ImagePickerBloc extends Bloc<ImagePickerEvents, ImagePickerState> {
       print("Image selection canceled or no image selected.");
     }
     emit(state.copyWith(image: image));
+  }
+
+  void _ClearImage(ClearImage events, Emitter<ImagePickerState> emit)async{
+    image = null;
+    emit(state.copyWith(image: null));
+    print("${state.image!.path}---------------> image");
   }
 }
